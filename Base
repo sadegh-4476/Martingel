@@ -374,9 +374,9 @@ namespace cAlgo.Robots
              {
              //=======  پوزیشن در ضرر
              
-             double Base = Math.Abs ((  position.EntryPrice - obj.YValue ) / Symbol.PipSize );
+             double Base = Math.Abs ((   obj.YValue  - position.EntryPrice ) / Symbol.PipSize );
              
-             double stop = Math.Abs(   position.EntryPrice  - ( Base * Symbol.PipSize));
+             double stop = Math.Abs(   position.EntryPrice   + ( Base * Symbol.PipSize));
              
              ModifyPositionAsync(position, position.StopLoss, stop);
              
