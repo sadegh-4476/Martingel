@@ -281,11 +281,11 @@ namespace cAlgo.Robots
            if (obj.YValue > Symbol.Ask)
              {
              
-             PlaceStopOrder(TradeType.Buy, SymbolName, (0.01 * 100000),obj.YValue, "myStopOrder");
+             PlaceStopOrder(TradeType.Buy, SymbolName, (0.01 * 100000),obj.YValue, "Buy");
              }
              else
              {
-             PlaceLimitOrder(TradeType.Buy, SymbolName, (0.01 * 100000),obj.YValue, "myStopOrder");
+             PlaceLimitOrder(TradeType.Buy, SymbolName, (0.01 * 100000),obj.YValue, "Buy");
              }
   
              }
@@ -302,17 +302,17 @@ namespace cAlgo.Robots
            if (obj.YValue < Symbol.Bid)
              {
              
-             PlaceStopOrder(TradeType.Sell, SymbolName, (0.01 * 100000),obj.YValue, "myStopOrder");
+             PlaceStopOrder(TradeType.Sell, SymbolName, (0.01 * 100000),obj.YValue, "Sell");
              }
              else
              {
-             PlaceLimitOrder(TradeType.Sell, SymbolName, (0.01 * 100000),obj.YValue, "myStopOrder");
+             PlaceLimitOrder(TradeType.Sell, SymbolName, (0.01 * 100000),obj.YValue, "Sell");
              }
   
              }
            } 
                          
-       //=======  set stoploss
+       //=======   Move Tp SL
        
        
      if  (obj.AltKey && !obj.CtrlKey && !obj.ShiftKey)
@@ -321,22 +321,74 @@ namespace cAlgo.Robots
   
            
              
-            Position[] positions = Positions.FindAll("Sell Order");
+            Position[] positions = Positions.FindAll("Sell ");
             if (positions.Length == 0)
                 return;
 
              foreach (var position in positions)
              {
+             if( obj.YValue > Ask )
              
+             { 
+             
+           if( obj.YValue > position.EntryPrice )
+             
+             {
+              //========= پوزیشن در ضرر یا سر به سر  
              double Base = Math.Abs ((obj.YValue - position.EntryPrice ) / Symbol.PipSize );
              
              double stop = Math.Abs(   position.EntryPrice +( Base * Symbol.PipSize));
              
              ModifyPositionAsync(position, stop, position.TakeProfit);
-   
-              }
+             }
+             else
+             {
+             //=======  پوزیشن در سود
+             
+             double Base = Math.Abs (( position.EntryPrice - obj.YValue  ) / Symbol.PipSize );
+             
+             double stop = Math.Abs(   position.EntryPrice -( Base * Symbol.PipSize));
+             
+             ModifyPositionAsync(position, stop, position.TakeProfit);
+             
+             }
+
+            }
+            else
+            {
+           if( obj.YValue < position.EntryPrice )
+             
+             {
+            //=========   پوزیشن در سود
+             double Base = Math.Abs ((  position.EntryPrice - obj.YValue ) / Symbol.PipSize );
+             
+             double stop = Math.Abs(   position.EntryPrice  - ( Base * Symbol.PipSize));
+             
+             ModifyPositionAsync(position, position.StopLoss, stop);
+             }
+               else
+             {
+             //=======  پوزیشن در ضرر
+             
+             double Base = Math.Abs ((  position.EntryPrice - obj.YValue ) / Symbol.PipSize );
+             
+             double stop = Math.Abs(   position.EntryPrice  - ( Base * Symbol.PipSize));
+             
+             ModifyPositionAsync(position, position.StopLoss, stop);
+             
+             }
+             
+             
+             
+             }
        
-          }
+             }
+             
+             //========= Buy sl
+  
+            
+            }
+         
        
        
  
@@ -357,7 +409,7 @@ namespace cAlgo.Robots
        
         //Buy
   
-         ExecuteMarketOrder(TradeType.Buy, Symbol.Name, Symbol.QuantityToVolumeInUnits(0.01), "Buy Order" ,null,null);
+         ExecuteMarketOrder(TradeType.Buy, Symbol.Name, Symbol.QuantityToVolumeInUnits(0.01), "Buy " ,null,null);
         }       
         
 //+------------------------------------------------------------------+
@@ -369,7 +421,7 @@ namespace cAlgo.Robots
 
      
         //Sell
-         ExecuteMarketOrder(TradeType.Sell, Symbol.Name, Symbol.QuantityToVolumeInUnits(0.01), "Sell Order",null,null);
+         ExecuteMarketOrder(TradeType.Sell, Symbol.Name, Symbol.QuantityToVolumeInUnits(0.01), "Sell ",null,null);
        
         }       
         
