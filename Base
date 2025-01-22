@@ -1,0 +1,448 @@
+using System;
+using System.Linq;
+using cAlgo.API;
+using cAlgo.API.Indicators;
+using cAlgo.API.Internals;
+using cAlgo.Indicators;
+using System.Text.RegularExpressions;
+
+
+namespace cAlgo.Robots
+{
+    [Robot(TimeZone = TimeZones.UTC, AccessRights = AccessRights.None)]
+    public class TradePanelExperto : Robot
+    {
+
+
+        [Parameter("Vertical Position", Group = "Panel alignment", DefaultValue = VerticalAlignment.Top)]
+        public VerticalAlignment PanelVerticalAlignment { get; set; }
+
+        [Parameter("Horizontal Position", Group = "Panel alignment", DefaultValue = HorizontalAlignment.Left)]
+        public HorizontalAlignment PanelHorizontalAlignment { get; set; }
+
+
+
+
+
+        public bool Show_line = false;
+        
+        public bool Sell_Limit = false;
+        
+        public bool Buy_Limit = false;
+        
+      
+        double lot   ;
+
+         
+        double Risk_Doll ;
+        double StopLine ;
+      
+         
+
+        public ChartHorizontalLine  SL_Line;
+        
+
+        public TextBox textboxtest;
+        public TextBox perboxtest;
+       
+        
+        public TextBlock lossblocktest;
+        public TextBlock lotblocktest;
+
+
+        protected override void OnStart()
+        {
+            
+          
+
+            var panel = new StackPanel 
+            {
+                Orientation = Orientation.Vertical,
+                VerticalAlignment = PanelVerticalAlignment,
+                HorizontalAlignment = PanelHorizontalAlignment,
+                Width = 150,
+                Height = 170,
+                Margin = "0 3",
+                BackgroundColor = "#FF3F3F3F"
+            };
+            
+       
+         
+            var textBox = new TextBox 
+            {
+                Width = 50,
+                VerticalAlignment = VerticalAlignment.Stretch,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Margin = "5 1 0 5",
+          
+                Text = "0.01"
+            };
+            textboxtest = textBox;
+
+
+
+               
+
+                    
+            var BuyBox = new Button 
+            {
+                Width = 65,
+                Text = "Buy",
+                FontWeight = FontWeight.DemiBold,
+                VerticalAlignment = VerticalAlignment.Bottom,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = "80 -20 0 0",
+                BackgroundColor = "#96AED0"
+            };
+            
+            var SellBox = new Button 
+            {
+                Width = 65,
+                Text = "Sell",
+                FontWeight = FontWeight.DemiBold,
+                VerticalAlignment = VerticalAlignment.Bottom,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = "5 0 30 0",
+                BackgroundColor = "#C8102E"
+            };
+            
+          //========================
+          
+           var checkBoxBuyLimit = new CheckBox 
+            {
+                Text = "BuyLimit ",
+                //IsChecked = Chart.DisplaySettings.TickVolume,
+                VerticalAlignment = VerticalAlignment.Top,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = "80 -15 0 0 "
+            };
+            //===============
+          var checkBoxSellLimit = new CheckBox 
+            {
+                Text = "SellLimit ",
+                //IsChecked = Chart.DisplaySettings.TickVolume,
+                VerticalAlignment = VerticalAlignment.Top,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = "5 10 0 0"
+            };
+            
+            
+            //===============
+            
+            
+         var Lot = new TextBlock 
+            {
+                Text = "Lot:",
+                FontWeight = FontWeight.DemiBold,
+                Margin = "6 0 0 7", 
+                ForegroundColor = Color.White 
+               };
+               
+               lotblocktest = Lot ;
+             
+         var loss = new TextBlock 
+            {
+                Text = "Loss:",
+                FontWeight = FontWeight.DemiBold,
+                Margin = "6 0 0 5", 
+                ForegroundColor = Color.White 
+              };
+              
+               lossblocktest = loss ;
+               
+               //=====
+            
+            panel.AddChild(textBox);
+         
+         
+            panel.AddChild(SellBox) ; panel.AddChild(BuyBox);
+            
+            panel.AddChild(checkBoxSellLimit);   panel.AddChild(checkBoxBuyLimit);
+         
+            panel.AddChild(Lot); panel.AddChild(loss);
+
+
+            Chart.AddControl(panel);
+
+
+              //===============
+            SellBox.Click += OnSellBoxClick;
+            BuyBox.Click += OnBuyBoxClick;
+            
+            checkBoxBuyLimit.Checked += OnCheckBoxBuyLimitChecked;
+            checkBoxBuyLimit.Unchecked += OnCheckBoxBuyLimitUnChecked;
+            
+            checkBoxSellLimit.Checked += OnCheckBoxSellLimitChecked;
+            checkBoxSellLimit.Unchecked += OnCheckBoxSellLimitUnChecked;
+       
+            
+            Chart.MouseDown += OnChartMouseDown;
+            
+
+          
+        }
+//+------------------------------------------------------------------+
+//|     ===================   checkBoxBuyLimit   =================== |
+//+------------------------------------------------------------------+
+        void OnCheckBoxBuyLimitUnChecked(CheckBoxEventArgs obj)
+        {
+            if (obj.CheckBox.IsChecked == false)
+            {
+                 Buy_Limit = false ;
+  
+            }
+        }
+
+      
+
+        void OnCheckBoxBuyLimitChecked(CheckBoxEventArgs obj)
+        {
+
+        if (obj.CheckBox.IsChecked == true)
+            {
+
+                 Buy_Limit = true ;
+            } 
+
+                
+           }
+//+------------------------------------------------------------------+
+//|  ===================     checkSellBuyLimit   ==============      |
+//+------------------------------------------------------------------+
+        void OnCheckBoxSellLimitUnChecked(CheckBoxEventArgs obj)
+        {
+            if (obj.CheckBox.IsChecked == false)
+            {
+            
+             Sell_Limit = false ;
+
+            }
+        }
+
+        void OnCheckBoxSellLimitChecked(CheckBoxEventArgs obj)
+          
+          {
+
+   
+        if (obj.CheckBox.IsChecked == true)
+            {
+
+               Sell_Limit = true ;  
+            } 
+
+                
+           }
+                
+    
+
+
+//+------------------------------------------------------------------+
+//|     ===================   ON TICK    ===================         |
+//+------------------------------------------------------------------+  
+        
+    protected override  void OnTick()
+        {
+     
+
+
+       }
+        
+
+//+------------------------------------------------------------------+
+//|     ===================  CREATE         ===================      |
+//+------------------------------------------------------------------+
+ 
+  void OnChartMouseDown(ChartMouseEventArgs obj)
+        {
+     
+             
+          if  (!obj.AltKey && obj.CtrlKey && !obj.ShiftKey)
+            {
+
+
+                SL_Line = Chart.DrawHorizontalLine("Sl Line" ,  obj.YValue  ,    Color.Red);
+                SL_Line.IsInteractive = true;
+                SL_Line.LineStyle = LineStyle.LinesDots;
+
+            
+               Show_line = true;
+     
+               
+             } 
+         
+         //==== pending  buy 
+         
+    if  ( obj.ShiftKey && !obj.CtrlKey)
+          {
+
+          if ( Buy_Limit  == true && Sell_Limit  == false   )
+          
+             {
+           if (obj.YValue > Symbol.Ask)
+             {
+             
+             PlaceStopOrder(TradeType.Buy, SymbolName, (0.01 * 100000),obj.YValue, "myStopOrder");
+             }
+             else
+             {
+             PlaceLimitOrder(TradeType.Buy, SymbolName, (0.01 * 100000),obj.YValue, "myStopOrder");
+             }
+  
+             }
+           } 
+             
+        //==== pending  sell  
+        
+     if  ( obj.ShiftKey && !obj.CtrlKey)
+          {
+
+          if ( Buy_Limit  == false && Sell_Limit  == true   )
+          
+             {
+           if (obj.YValue < Symbol.Bid)
+             {
+             
+             PlaceStopOrder(TradeType.Sell, SymbolName, (0.01 * 100000),obj.YValue, "myStopOrder");
+             }
+             else
+             {
+             PlaceLimitOrder(TradeType.Sell, SymbolName, (0.01 * 100000),obj.YValue, "myStopOrder");
+             }
+  
+             }
+           } 
+                         
+       //=======  set stoploss
+       
+       
+     if  (obj.AltKey && !obj.CtrlKey && !obj.ShiftKey)
+          {
+
+  
+           
+             
+            Position[] positions = Positions.FindAll("Sell Order");
+            if (positions.Length == 0)
+                return;
+
+             foreach (var position in positions)
+             {
+             
+             double Base = Math.Abs ((obj.YValue - position.EntryPrice ) / Symbol.PipSize );
+             
+             double stop = Math.Abs(   position.EntryPrice +( Base * Symbol.PipSize));
+             
+             ModifyPositionAsync(position, stop, position.TakeProfit);
+   
+              }
+       
+          }
+       
+       
+ 
+  
+//======
+           
+            } 
+  
+
+        
+//+------------------------------------------------------------------+
+//|     ===================  Buy BOTTON     ===================      |
+//+------------------------------------------------------------------+
+
+      void OnBuyBoxClick(ButtonClickEventArgs obj)
+        {
+                  Console.Beep(1000, 200);
+       
+        //Buy
+  
+         ExecuteMarketOrder(TradeType.Buy, Symbol.Name, Symbol.QuantityToVolumeInUnits(0.01), "Buy Order" ,null,null);
+        }       
+        
+//+------------------------------------------------------------------+
+//|     ===================  Sell BOTTON     ===================      |
+//+------------------------------------------------------------------+
+
+      void OnSellBoxClick(ButtonClickEventArgs obj)
+        {
+
+     
+        //Sell
+         ExecuteMarketOrder(TradeType.Sell, Symbol.Name, Symbol.QuantityToVolumeInUnits(0.01), "Sell Order",null,null);
+       
+        }       
+        
+  
+//+------------------------------------------------------------------+
+//|     ===================  DATA CHECK     ===================      |
+//+------------------------------------------------------------------+
+void Data_Check()
+  {
+        
+
+     var Risk  = (textboxtest.Text );
+  
+     
+  
+  double Risk_Per = double.Parse(Risk);
+  double doll =Math.Abs(  Account.Balance * (Risk_Per /  100));
+   
+
+  Risk_Doll =  Math.Round(doll,2);
+  
+  lotblocktest.Text = ("Lot: "+Risk_Doll);
+  
+        //=============
+        
+         var lines = Chart.FindAllObjects<ChartHorizontalLine>();
+
+            foreach (var line in lines)
+            {
+                if (line.Name.Contains("Sl Line") )
+                {
+      
+                   
+                    StopLine =    ((line as ChartHorizontalLine).Y);
+                    lossblocktest.Text = ("Loss: " );
+                   
+                }
+            }
+        
+       //============
+ 
+          
+    
+   
+ 
+  }
+
+
+
+
+
+
+
+
+//+------------------------------------------------------------------+
+//|     ===================   STOP  BOT        ===================   |
+//+------------------------------------------------------------------+ 
+
+        
+void Stop_bot()
+   
+   
+    {
+     
+     Show_line = false;
+
+
+     Chart.RemoveObject("Sl Line");
+      Stop();
+
+ 
+     }
+
+ //***************************************************************************************************
+    }
+}
