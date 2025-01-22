@@ -17,7 +17,7 @@ namespace cAlgo.Robots
         [Parameter("Vertical Position", Group = "Panel alignment", DefaultValue = VerticalAlignment.Top)]
         public VerticalAlignment PanelVerticalAlignment { get; set; }
 
-        [Parameter("Horizontal Position", Group = "Panel alignment", DefaultValue = HorizontalAlignment.Left)]
+        [Parameter("Horizontal Position", Group = "Panel alignment", DefaultValue = HorizontalAlignment.Center)]
         public HorizontalAlignment PanelHorizontalAlignment { get; set; }
         
        [Parameter("Fibonacci Retracement Key", DefaultValue = Key.R, Group = "Drawing")]
@@ -33,7 +33,7 @@ namespace cAlgo.Robots
         public bool Buy_Limit = false;
         
       
-        double lot   ;
+        double Lot   ;
 
          
         double Risk_Doll ;
@@ -245,8 +245,16 @@ namespace cAlgo.Robots
     protected override  void OnTick()
         {
      
+      
+     var Risk  = (textboxtest.Text );
 
-
+     Lot = Convert.ToDouble(Risk);
+     
+     Data_Check();
+     
+     
+ 
+      
        }
         
 
@@ -283,14 +291,17 @@ namespace cAlgo.Robots
            if (obj.YValue > Symbol.Ask)
              {
              
-             PlaceStopOrder(TradeType.Buy, SymbolName, (0.01 * 100000),obj.YValue, "MyLabel",null,null,null,null,"Buy");
+             PlaceStopOrder(TradeType.Buy, SymbolName, (Lot * 100000),obj.YValue, "MyLabel",null,null,null,null,"Buy");
+             
              }
              else
              {
-             PlaceLimitOrder(TradeType.Buy, SymbolName, (0.01 * 100000),obj.YValue, "MyLabel",null,null,null,null,"Buy");
+             PlaceLimitOrder(TradeType.Buy, SymbolName, (Lot * 100000),obj.YValue, "MyLabel",null,null,null,null,"Buy");
              }
   
              }
+             
+
            } 
              
         //==== pending  sell  
@@ -298,20 +309,23 @@ namespace cAlgo.Robots
      if  ( obj.ShiftKey && !obj.CtrlKey && !obj.AltKey )
           {
 
-          if ( Buy_Limit  == false && Sell_Limit  == true   )
+          if (  Sell_Limit  == true &&  Buy_Limit  == false )
           
              {
            if (obj.YValue < Symbol.Bid)
              {
              
-             PlaceStopOrder(TradeType.Sell, SymbolName, (0.01 * 100000),obj.YValue, "MyLabel",null,null,null,null,"Sell");
+             PlaceStopOrder(TradeType.Sell, SymbolName, (Lot * 100000),obj.YValue, "MyLabel",null,null,null,null,"Sell");
+             
              }
              else
              {
-             PlaceLimitOrder(TradeType.Sell, SymbolName, (0.01 * 100000),obj.YValue, "MyLabel",null,null,null,null,"Sell");
+             PlaceLimitOrder(TradeType.Sell, SymbolName, (Lot * 100000),obj.YValue, "MyLabel",null,null,null,null,"Sell");
              }
   
              }
+           
+             
            } 
                          
        //=======   Move Tp SL
@@ -321,16 +335,15 @@ namespace cAlgo.Robots
      if  ( !obj.ShiftKey && !obj.CtrlKey && obj.AltKey )
        
        {
-
+       
+             var Sellpositions = Positions.FindAll("MyLabel ",SymbolName,TradeType.Sell);
     
-            Position[] Sellpositions = Positions.FindAll("MyLabel ",SymbolName,TradeType.Sell);
-            
+           // Position[] Sellpositions = Positions.FindAll("MyLabel ",SymbolName,TradeType.Sell);
              
              foreach (var position in Sellpositions)
              {
              
          
-             
              if( obj.YValue > Ask )
              
              { 
@@ -342,8 +355,8 @@ namespace cAlgo.Robots
              double Base = Math.Abs ((obj.YValue - position.EntryPrice ) / Symbol.PipSize );
              
              double stop = Math.Abs(   position.EntryPrice +( Base * Symbol.PipSize));
-             
-             ModifyPositionAsync(position, stop, position.TakeProfit);
+          
+             ModifyPositionAsync (position, stop, position.TakeProfit);
              }
              else
              {
@@ -353,7 +366,7 @@ namespace cAlgo.Robots
              
              double stop = Math.Abs(   position.EntryPrice -( Base * Symbol.PipSize));
              
-             ModifyPositionAsync(position, stop, position.TakeProfit);
+             ModifyPositionAsync ( position, stop, position.TakeProfit);
              
              }
 
@@ -388,12 +401,12 @@ namespace cAlgo.Robots
        
             }
 //=======
-      
+   
  //====================================== Buy sl
  
-       
+          var Buypositions = Positions.FindAll("MyLabel ",SymbolName,TradeType.Buy);
             
-            Position[] Buypositions = Positions.FindAll("MyLabel ",SymbolName,TradeType.Buy);
+           // Position[] Buypositions = Positions.FindAll("MyLabel ",SymbolName,TradeType.Buy);
            
           foreach (var position in Buypositions)
              {
@@ -479,7 +492,7 @@ namespace cAlgo.Robots
        
         //Buy
   
-         ExecuteMarketOrder(TradeType.Buy, Symbol.Name, Symbol.QuantityToVolumeInUnits(0.01), "MyLabel " ,null,null,"Buy");
+         ExecuteMarketOrder(TradeType.Buy, Symbol.Name, Symbol.QuantityToVolumeInUnits(Lot), "MyLabel " ,null,null,"Buy");
         }       
         
 //+------------------------------------------------------------------+
@@ -491,7 +504,7 @@ namespace cAlgo.Robots
 
      
         //Sell
-         ExecuteMarketOrder(TradeType.Sell, Symbol.Name, Symbol.QuantityToVolumeInUnits(0.01), "MyLabel ",null,null,"Sell");
+         ExecuteMarketOrder(TradeType.Sell, Symbol.Name, Symbol.QuantityToVolumeInUnits(Lot), "MyLabel ",null,null,"Sell");
        
         }       
         
@@ -503,17 +516,6 @@ void Data_Check()
   {
         
 
-     var Risk  = (textboxtest.Text );
-  
-     
-  
-  double Risk_Per = double.Parse(Risk);
-  double doll =Math.Abs(  Account.Balance * (Risk_Per /  100));
-   
-
-  Risk_Doll =  Math.Round(doll,2);
-  
-  lotblocktest.Text = ("Lot: "+Risk_Doll);
   
         //=============
         
@@ -524,26 +526,61 @@ void Data_Check()
                 if (line.Name.Contains("Sl Line") )
                 {
       
-                   
+                 
                     StopLine =    ((line as ChartHorizontalLine).Y);
-                    lossblocktest.Text = ("Loss: " );
+                    
                    
                 }
             }
         
        //============
- 
-          
     
+       
+         var Buypositions = Positions.FindAll("MyLabel ");
+       
+            var Profit  = 0.0 ;
+            var PnL  = 0.0;
+            var Pip        = 0.0;
+            var EntryPrice = 0.0;
+            var Vloume    = 0.0 ;
+            var EntryCommissions    = 0.0 ;
+            var Vale = StopLine;
+                
+             foreach (var Position in Buypositions)
+             {
+             
+             Vloume              = Math.Abs( Position.VolumeInUnits / 100000 );
+             
+             EntryPrice          =  Position.EntryPrice;
+             
+             EntryCommissions    =   Math.Abs( Position.Commissions  +  Position.Commissions );
+            
+
+             var entry_up        =  Math.Max( Vale , EntryPrice  );
+             var entry_down      =  Math.Min( Vale , EntryPrice  );
+             
+             Pip                 =  Math.Abs( entry_up  -  entry_down  );
+            
+             PnL                 =   Math.Abs ( ((Vloume  * Pip) / Symbol.PipValue) * 10);
+            
+             Profit          += Math.Round (   Math.Abs ( PnL - EntryCommissions    ) ,2);
+       
+             lossblocktest.Text = ("Loss: "+Profit );
+
+             }
+   
+   
+
+   
+   
    
  
   }
 
 
-
-
-
-
+//+------------------------------------------------------------------+
+//|     ===================   FindPositions        ===================   |
+//+------------------------------------------------------------------+ 
 
 
 //+------------------------------------------------------------------+
