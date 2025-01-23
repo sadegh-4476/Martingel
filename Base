@@ -20,9 +20,11 @@ namespace cAlgo.Robots
         [Parameter("Horizontal Position", Group = "Panel alignment", DefaultValue = HorizontalAlignment.Center)]
         public HorizontalAlignment PanelHorizontalAlignment { get; set; }
         
-       [Parameter("Fibonacci Retracement Key", DefaultValue = Key.R, Group = "Drawing")]
-        public Key Set { get; set; }
-
+         [Parameter("Order Comment")]
+         public string OrderComment { get; set; }
+         
+         [Parameter("Order Label")]
+         public string OrderLabel { get; set; }
 
 
 
@@ -34,11 +36,14 @@ namespace cAlgo.Robots
         
       
         double Lot   ;
+        
+        double Select_Point  ;
 
+        string Lable = "MyLable" ; 
          
-        double Risk_Doll ;
+         
         double StopLine ;
-      
+            
          
 
         public ChartHorizontalLine  SL_Line;
@@ -264,43 +269,27 @@ namespace cAlgo.Robots
  
   void OnChartMouseDown(ChartMouseEventArgs obj)
         {
-     
+         
+         Select_Point = obj.YValue ;
+         
+         
              
-          if  (!obj.AltKey && obj.CtrlKey && !obj.ShiftKey)
+      if  (!obj.AltKey && obj.CtrlKey && !obj.ShiftKey)
             {
 
 
-                SL_Line = Chart.DrawHorizontalLine("Sl Line" ,  obj.YValue  ,    Color.Red);
+                SL_Line = Chart.DrawHorizontalLine("Sl Line" , Select_Point ,    Color.Red);
                 SL_Line.IsInteractive = true;
                 SL_Line.LineStyle = LineStyle.LinesDots;
-
-            
-               Show_line = true;
-     
-               
-             } 
+           } 
          
          //==== pending  buy 
          
     if ( obj.ShiftKey && !obj.CtrlKey && !obj.AltKey )
           {
-
-          if ( Buy_Limit  == true && Sell_Limit  == false   )
-          
-             {
-           if (obj.YValue > Symbol.Ask)
-             {
-             
-             PlaceStopOrder(TradeType.Buy, SymbolName, (Lot * 100000),obj.YValue, "MyLabel",null,null,null,null,"Buy");
-             
-             }
-             else
-             {
-             PlaceLimitOrder(TradeType.Buy, SymbolName, (Lot * 100000),obj.YValue, "MyLabel",null,null,null,null,"Buy");
-             }
-  
-             }
-             
+         
+         Pending_Buy();
+ 
 
            } 
              
@@ -308,207 +297,49 @@ namespace cAlgo.Robots
         
      if  ( obj.ShiftKey && !obj.CtrlKey && !obj.AltKey )
           {
+         
+         Pending_Sell();
 
-          if (  Sell_Limit  == true &&  Buy_Limit  == false )
-          
-             {
-           if (obj.YValue < Symbol.Bid)
-             {
-             
-             PlaceStopOrder(TradeType.Sell, SymbolName, (Lot * 100000),obj.YValue, "MyLabel",null,null,null,null,"Sell");
-             
-             }
-             else
-             {
-             PlaceLimitOrder(TradeType.Sell, SymbolName, (Lot * 100000),obj.YValue, "MyLabel",null,null,null,null,"Sell");
-             }
-  
-             }
-           
-             
+            
            } 
                          
        //=======   Move Tp SL
        
-//====================================== Sell sl   
+
 
      if  ( !obj.ShiftKey && !obj.CtrlKey && obj.AltKey )
        
        {
-       
-             var Sellpositions = Positions.FindAll("MyLabel ",SymbolName,TradeType.Sell);
-    
-           // Position[] Sellpositions = Positions.FindAll("MyLabel ",SymbolName,TradeType.Sell);
-             
-             foreach (var position in Sellpositions)
-             {
-             
-         
-             if( obj.YValue > Ask )
-             
-             { 
-             
-           if( obj.YValue > position.EntryPrice )
-             
-             {
-              //========= پوزیشن در ضرر یا سر به سر  
-             double Base = Math.Abs ((obj.YValue - position.EntryPrice ) / Symbol.PipSize );
-             
-             double stop = Math.Abs(   position.EntryPrice +( Base * Symbol.PipSize));
-          
-             ModifyPositionAsync (position, stop, position.TakeProfit);
-             }
-             else
-             {
-             //=======  پوزیشن در سود
-             
-             double Base = Math.Abs (( position.EntryPrice - obj.YValue  ) / Symbol.PipSize );
-             
-             double stop = Math.Abs(   position.EntryPrice -( Base * Symbol.PipSize));
-             
-             ModifyPositionAsync ( position, stop, position.TakeProfit);
-             
-             }
-
-            }
-            else
-            {
-           if( obj.YValue < position.EntryPrice )
-             
-             {
-            //=========   پوزیشن در سود
-             double Base = Math.Abs ((  position.EntryPrice - obj.YValue ) / Symbol.PipSize );
-             
-             double stop = Math.Abs(   position.EntryPrice  - ( Base * Symbol.PipSize));
-             
-             ModifyPositionAsync(position, position.StopLoss, stop);
-             }
-               else
-             {
-             //=======  پوزیشن در ضرر
-             
-             double Base = Math.Abs ((   obj.YValue  - position.EntryPrice ) / Symbol.PipSize );
-             
-             double stop = Math.Abs(   position.EntryPrice   + ( Base * Symbol.PipSize));
-             
-             ModifyPositionAsync(position, position.StopLoss, stop);
-             
-             }
-             
-             
-             
-             }
-       
-            }
-//=======
+     
    
- //====================================== Buy sl
- 
-          var Buypositions = Positions.FindAll("MyLabel ",SymbolName,TradeType.Buy);
-            
-           // Position[] Buypositions = Positions.FindAll("MyLabel ",SymbolName,TradeType.Buy);
-           
-          foreach (var position in Buypositions)
-             {
-             if( obj.YValue > Ask )
+         foreach (var order in PendingOrders)
+         
+         if( order.Comment == "Sell" )
+          {
+         
+              if( Select_Point > Ask )
              
              { 
              
-           if( obj.YValue > position.EntryPrice )
+           if( Select_Point > order.CurrentPrice )
              
              {
-              //=========  پوزیشن در سود 
-             double Base = Math.Abs ((obj.YValue - position.EntryPrice ) / Symbol.PipSize );
-             
-             double stop = Math.Abs(   position.EntryPrice +( Base * Symbol.PipSize));
-             
-             ModifyPositionAsync(position, position.StopLoss, stop);
-             }
-           else
-             {
-             //=======  پوزیشن در ضرر
-             
-             double Base = Math.Abs (( position.EntryPrice - obj.YValue  ) / Symbol.PipSize );
-             
-             double stop = Math.Abs(   position.EntryPrice -( Base * Symbol.PipSize));
-             
-             ModifyPositionAsync(position, position.StopLoss, stop);
-             
-             }
 
-            }
-            else
-            {
-           if( obj.YValue < position.EntryPrice )
              
-             {
-            //=========   پوزیشن در سود
-             double Base = Math.Abs ((  position.EntryPrice - obj.YValue ) / Symbol.PipSize );
-             
-             double stop = Math.Abs(   position.EntryPrice  - ( Base * Symbol.PipSize));
-             
-             ModifyPositionAsync(position, stop, position.TakeProfit);
+              order.ModifyStopLossPrice(Select_Point);
+
              }
-               else
-             {
-             //=======  پوزیشن در ضرر
-             
-             double Base = Math.Abs ((  obj.YValue -position.EntryPrice   ) / Symbol.PipSize );
-             
-             double stop = Math.Abs(   position.EntryPrice  + ( Base * Symbol.PipSize));
-             
-             ModifyPositionAsync(position, stop, position.TakeProfit);
-             
-             }
-             
-             
-             
-             }
-       
-            }
-  
-//=======
-            
-            
-            
-            
-            
-            
-            
+           }
+ 
+         
+          }
+     
        }
-//======
+
            
              
   
 }
-        
-//+------------------------------------------------------------------+
-//|     ===================  Buy BOTTON     ===================      |
-//+------------------------------------------------------------------+
-
-      void OnBuyBoxClick(ButtonClickEventArgs obj)
-        {
-                 
-       
-        //Buy
-  
-         ExecuteMarketOrder(TradeType.Buy, Symbol.Name, Symbol.QuantityToVolumeInUnits(Lot), "MyLabel " ,null,null,"Buy");
-        }       
-        
-//+------------------------------------------------------------------+
-//|     ===================  Sell BOTTON     ===================      |
-//+------------------------------------------------------------------+
-
-      void OnSellBoxClick(ButtonClickEventArgs obj)
-        {
-
-     
-        //Sell
-         ExecuteMarketOrder(TradeType.Sell, Symbol.Name, Symbol.QuantityToVolumeInUnits(Lot), "MyLabel ",null,null,"Sell");
-       
-        }       
-        
-  
 //+------------------------------------------------------------------+
 //|     ===================  DATA CHECK     ===================      |
 //+------------------------------------------------------------------+
@@ -535,59 +366,357 @@ void Data_Check()
         
        //============
     
+
+   
+
        
-         var Buypositions = Positions.FindAll("MyLabel ");
+   
+   
+
+  
+  
+ 
        
-            var Profit  = 0.0 ;
-            var PnL  = 0.0;
-            var Pip        = 0.0;
-            var EntryPrice = 0.0;
-            var Vloume    = 0.0 ;
-            var EntryCommissions    = 0.0 ;
-            var Vale = StopLine;
-                
-             foreach (var Position in Buypositions)
+        
+     
+        
+     
+            
+      }
+   
+//+------------------------------------------------------------------+
+//|     ===================  Buy BOTTON     ===================      |
+//+------------------------------------------------------------------+
+
+      void OnBuyBoxClick(ButtonClickEventArgs obj)
+        {
+       
+        //Buy
+  
+         ExecuteMarketOrder(TradeType.Buy, Symbol.Name, Symbol.QuantityToVolumeInUnits(Lot), "MyLabel " ,null,null,"Buy");
+        }       
+        
+//+------------------------------------------------------------------+
+//|     ===================  Sell BOTTON     ===================      |
+//+------------------------------------------------------------------+
+
+      void OnSellBoxClick(ButtonClickEventArgs obj)
+        {
+
+     
+        //Sell
+         ExecuteMarketOrder(TradeType.Sell, Symbol.Name, Symbol.QuantityToVolumeInUnits(Lot), "MyLabel ",null,null,"Sell");
+       
+        }       
+        
+  
+
+
+//+------------------------------------------------------------------+
+//|     ===================  Pending_Buy         =================   |
+//+------------------------------------------------------------------+ 
+   void Pending_Buy()
+      {
+      
+            if ( Buy_Limit  == true && Sell_Limit  == false   )
+          
+             {
+           if (Select_Point > Symbol.Ask)
              {
              
-             Vloume              = Math.Abs( Position.VolumeInUnits / 100000 );
+             PlaceStopOrder(TradeType.Buy, SymbolName, (Lot * 100000),Select_Point, "MyLabel",null,null,null,null,"Buy");
              
-             EntryPrice          =  Position.EntryPrice;
+             }
+             else
+             {
+             PlaceLimitOrder(TradeType.Buy, SymbolName, (Lot * 100000),Select_Point, "MyLabel",null,null,null,null,"Buy");
+             }
+  
+             }
+      
+      
+      }
+//+------------------------------------------------------------------+
+//|     ===================  Pending_Sell        =================   |
+//+------------------------------------------------------------------+ 
+   void Pending_Sell()
+      {
+      
+        if (  Sell_Limit  == true &&  Buy_Limit  == false )
+          
+             {
+           if ( Select_Point < Symbol.Bid)
+             {
              
-             EntryCommissions    =   Math.Abs( Position.Commissions  +  Position.Commissions );
+             PlaceStopOrder(TradeType.Sell, SymbolName, (Lot * 100000),Select_Point, "MyLabel",null,null,null,null,"Sell");
+             
+             }
+             else
+             {
+             PlaceLimitOrder(TradeType.Sell, SymbolName, (Lot * 100000),Select_Point, "MyLabel",null,null,null,null,"Sell");
+             }
+  
+             }
+      
+      
+      
+      }
+//+------------------------------------------------------------------+
+//|     ===================  SELL LOSS           =================   |
+//+------------------------------------------------------------------+ 
+   void SELL_LOSS()
+      {
+      
+      
+      
+      
+      }
+
+//+------------------------------------------------------------------+
+//|     ===================   SELL PROFIT        =================   |
+//+------------------------------------------------------------------+ 
+   void  SELL_PROFIT()
+      {
+      
+      
+      
+      
+      }
+
+//+------------------------------------------------------------------+
+//|     ===================   BUY PROFIT         =================   |
+//+------------------------------------------------------------------+ 
+   void BUY_PROFIT()
+      {
+      
+      
+      
+      
+      }
+
+//+------------------------------------------------------------------+
+//|     ===================   BUY LOSS           =================   |
+//+------------------------------------------------------------------+ 
+   void BUY_LOSS ()
+      {
+      
+      
+      
+      
+      }
+//+------------------------------------------------------------------+
+//|     ===================   BUY_SL_TP          =================   |
+//+------------------------------------------------------------------+ 
+   void BUY_SL_TP ()
+      {
+      
+          var Buypositions = Positions.FindAll("MyLabel ",SymbolName,TradeType.Buy);
+            
+         
+           
+          foreach (var position in Buypositions)
+             {
+             if( Select_Point > Ask )
+             
+             { 
+             
+           if( Select_Point> position.EntryPrice )
+             
+             {
+              //=========  پوزیشن در سود 
+             double Base = Math.Abs ((Select_Point - position.EntryPrice ) / Symbol.PipSize );
+             
+             double stop = Math.Abs(   position.EntryPrice +( Base * Symbol.PipSize));
+             
+             ModifyPositionAsync(position, position.StopLoss, stop);
+             }
+           else
+             {
+             //=======  پوزیشن در ضرر
+             
+             double Base = Math.Abs (( position.EntryPrice - Select_Point  ) / Symbol.PipSize );
+             
+             double stop = Math.Abs(   position.EntryPrice -( Base * Symbol.PipSize));
+             
+             ModifyPositionAsync(position, position.StopLoss, stop);
+             
+             }
+
+            }
+            else
+            {
+           if( Select_Point < position.EntryPrice )
+             
+             {
+            //=========   پوزیشن در سود
+             double Base = Math.Abs ((  position.EntryPrice - Select_Point) / Symbol.PipSize );
+             
+             double stop = Math.Abs(   position.EntryPrice  - ( Base * Symbol.PipSize));
+             
+             ModifyPositionAsync(position, stop, position.TakeProfit);
+             }
+               else
+             {
+             //=======  پوزیشن در ضرر
+             
+             double Base = Math.Abs ((  Select_Point - position.EntryPrice   ) / Symbol.PipSize );
+             
+             double stop = Math.Abs(   position.EntryPrice  + ( Base * Symbol.PipSize));
+             
+             ModifyPositionAsync(position, stop, position.TakeProfit);
+             
+             }
+             
+             
+             
+             }
+       
+            }
+      
+      
+      }
+//+------------------------------------------------------------------+
+//|     ===================   SELL_TP_SL         =================   |
+//+------------------------------------------------------------------+ 
+   void SELL_TP_SL ()
+      {
+      
+      var Sellpositions = Positions.FindAll("MyLabel ",SymbolName,TradeType.Sell);
+      
+             foreach (var position in  Sellpositions)
+             {
+             
+         
+             if( Select_Point > Ask )
+             
+             { 
+             
+           if( Select_Point > position.EntryPrice )
+             
+             {
+              //========= پوزیشن در ضرر یا سر به سر  
+             double Base = Math.Abs ((Select_Point - position.EntryPrice ) / Symbol.PipSize );
+             
+             double stop = Math.Abs(   position.EntryPrice +( Base * Symbol.PipSize));
+          
+             ModifyPositionAsync (position, stop, position.TakeProfit);
+             }
+             else
+             {
+             //=======  پوزیشن در سود
+             
+             double Base = Math.Abs (( position.EntryPrice - Select_Point  ) / Symbol.PipSize );
+             
+             double stop = Math.Abs(   position.EntryPrice -( Base * Symbol.PipSize));
+             
+             ModifyPositionAsync ( position, stop, position.TakeProfit);
+             
+             }
+
+            }
+            else
+            {
+           if( Select_Point < position.EntryPrice )
+             
+             {
+            //=========   پوزیشن در سود
+             double Base = Math.Abs ((  position.EntryPrice - Select_Point ) / Symbol.PipSize );
+             
+             double stop = Math.Abs(   position.EntryPrice  - ( Base * Symbol.PipSize));
+             
+             ModifyPositionAsync(position, position.StopLoss, stop);
+             }
+               else
+             {
+             //=======  پوزیشن در ضرر
+             
+             double Base = Math.Abs ((   Select_Point - position.EntryPrice ) / Symbol.PipSize );
+             
+             double stop = Math.Abs(   position.EntryPrice   + ( Base * Symbol.PipSize));
+             
+             ModifyPositionAsync(position, position.StopLoss, stop);
+             
+             }
+             
+             
+             
+             }
+       
+            } 
+      
+      
+      } 
+//+------------------------------------------------------------------+
+//|     ===================   FindPositions      =================   |
+//+------------------------------------------------------------------+ 
+   void FindPositions ()
+      {
+      
+             
+         //var Allpositions = Positions.FindAll("MyLabel ",SymbolName);
+       
+         var Profit            = 0.0 ;
+        
+             foreach (var Position in Positions)
+             {
+             
+           var   Vloume              = Math.Abs( Position.VolumeInUnits / 100000 );
+             
+           var   EntryPrice          =  Position.EntryPrice;
+           var Point                =  StopLine ;
+           var  EntryCommissions    =   Math.Abs( Position.Commissions  +  Position.Commissions );
             
 
-             var entry_up        =  Math.Max( Vale , EntryPrice  );
-             var entry_down      =  Math.Min( Vale , EntryPrice  );
+           var entry_up        =  Math.Max( Point , EntryPrice  );
+           var entry_down      =  Math.Min( Point , EntryPrice  );
              
-             Pip                 =  Math.Abs( entry_up  -  entry_down  );
+           var  Pip                 =  Math.Abs( entry_up  -  entry_down  );
             
-             PnL                 =   Math.Abs ( ((Vloume  * Pip) / Symbol.PipValue) * 10);
-            
-             Profit          += Math.Round (   Math.Abs ( PnL - EntryCommissions    ) ,2);
+           var   PnL                 =   Math.Abs ( ((Vloume  * Pip) / Symbol.PipValue) * 10);
+          
+           Profit          += Math.Round (   Math.Abs ( PnL - EntryCommissions    ) ,2);
        
              lossblocktest.Text = ("Loss: "+Profit );
 
              }
-   
-   
-
-   
-   
-   
- 
-  }
-
+      
+      
+      }
 
 //+------------------------------------------------------------------+
-//|     ===================   FindPositions        ===================   |
+//|     ===================  CloseAllOrders    ===================   |
 //+------------------------------------------------------------------+ 
+
+
+        private void CloseAllOrders()
+        {
+            foreach (var order in PendingOrders)
+            {
+                if (   order.SymbolName == SymbolName)
+                {
+                    CancelPendingOrderAsync(order);
+                }
+            }
+        }
+//+------------------------------------------------------------------+
+//|     ===================   CloseAllPosition ===================   |
+//+------------------------------------------------------------------+ 
+        private void CloseAllPositions()
+        {
+            foreach (var position in Positions)
+            {
+                if (position.Label == "MyLable" && position.SymbolName == SymbolName && position != null)
+                {
+                    ClosePositionAsync(position);
+                }
+            }
+        }
+
 
 
 //+------------------------------------------------------------------+
 //|     ===================   STOP  BOT        ===================   |
-//+------------------------------------------------------------------+ 
-
-        
+//+------------------------------------------------------------------+     
 void Stop_bot()
    
    
