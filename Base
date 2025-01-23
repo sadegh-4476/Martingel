@@ -20,11 +20,6 @@ namespace cAlgo.Robots
         [Parameter("Horizontal Position", Group = "Panel alignment", DefaultValue = HorizontalAlignment.Center)]
         public HorizontalAlignment PanelHorizontalAlignment { get; set; }
         
-         [Parameter("Order Comment")]
-         public string OrderComment { get; set; }
-         
-         [Parameter("Order Label")]
-         public string OrderLabel { get; set; }
 
 
 
@@ -68,7 +63,7 @@ namespace cAlgo.Robots
                 VerticalAlignment = PanelVerticalAlignment,
                 HorizontalAlignment = PanelHorizontalAlignment,
                 Width = 150,
-                Height = 170,
+                Height = 150,
                 Margin = "0 3",
                 BackgroundColor = "#FF3F3F3F"
             };
@@ -115,13 +110,48 @@ namespace cAlgo.Robots
             
           //========================
           
+ 
+            var DelOrdBox = new Button 
+            {
+                Width = 65,
+                Text = "Del O",
+                FontWeight = FontWeight.DemiBold,
+                VerticalAlignment = VerticalAlignment.Bottom,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = "5 5 30 0",
+                BackgroundColor = "#a6a6a6"
+            }; 
+            
+            var RevercBox = new Button 
+            {
+                Width = 65,
+                Text = "Reverc",
+                FontWeight = FontWeight.DemiBold,
+                VerticalAlignment = VerticalAlignment.Bottom,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = "80 -20 0 5",
+                BackgroundColor = "#a6a6a6"
+            };
+            
+            var ClosePBox = new Button 
+            {    
+                Width = 65,
+                Text = "Close ",
+                FontWeight = FontWeight.DemiBold,
+                VerticalAlignment = VerticalAlignment.Bottom,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = " 6 5 0 5",
+                BackgroundColor = "#a6a6a6"
+            };
+          //====================
+
            var checkBoxBuyLimit = new CheckBox 
             {
                 Text = "BuyLimit ",
                 //IsChecked = Chart.DisplaySettings.TickVolume,
                 VerticalAlignment = VerticalAlignment.Top,
                 HorizontalAlignment = HorizontalAlignment.Left,
-                Margin = "80 -15 0 0 "
+                Margin = "80 -15 0 5 "
             };
             //===============
           var checkBoxSellLimit = new CheckBox 
@@ -137,21 +167,13 @@ namespace cAlgo.Robots
             //===============
             
             
-         var Lot = new TextBlock 
-            {
-                Text = "Lot:",
-                FontWeight = FontWeight.DemiBold,
-                Margin = "6 0 0 7", 
-                ForegroundColor = Color.White 
-               };
-               
-               lotblocktest = Lot ;
+ 
              
          var loss = new TextBlock 
             {
                 Text = "Loss:",
                 FontWeight = FontWeight.DemiBold,
-                Margin = "6 0 0 5", 
+                Margin = "80 -20 0 5", 
                 ForegroundColor = Color.White 
               };
               
@@ -166,15 +188,23 @@ namespace cAlgo.Robots
             
             panel.AddChild(checkBoxSellLimit);   panel.AddChild(checkBoxBuyLimit);
          
-            panel.AddChild(Lot); panel.AddChild(loss);
-
-
+            
+            panel.AddChild(DelOrdBox) ; panel.AddChild(RevercBox); panel.AddChild(ClosePBox) ;  
+            panel.AddChild(loss);
+             
             Chart.AddControl(panel);
 
 
               //===============
             SellBox.Click += OnSellBoxClick;
             BuyBox.Click += OnBuyBoxClick;
+            
+            DelOrdBox.Click += OnDelOrdBoxClick;
+            
+            ClosePBox.Click += OnClosePBoxClick;
+            
+            RevercBox.Click += OnRevercBoxClick;
+            
             
             checkBoxBuyLimit.Checked += OnCheckBoxBuyLimitChecked;
             checkBoxBuyLimit.Unchecked += OnCheckBoxBuyLimitUnChecked;
@@ -388,7 +418,42 @@ void Data_Check()
        
         }       
         
-  
+//+------------------------------------------------------------------+
+//|     ===================  Delorder BOTTON     =================   |
+//+------------------------------------------------------------------+
+
+      void OnDelOrdBoxClick(ButtonClickEventArgs obj)
+        {
+ 
+           CloseAllOrders();
+
+        }       
+        
+//+------------------------------------------------------------------+
+//|     ===================  Reverc BOTTON     ===================   |
+//+------------------------------------------------------------------+
+
+      void OnRevercBoxClick(ButtonClickEventArgs obj)
+        {
+
+     
+         
+       
+        }       
+        
+//+------------------------------------------------------------------+
+//|     ===================  close BOTTON     ===================      |
+//+------------------------------------------------------------------+
+
+      void OnClosePBoxClick(ButtonClickEventArgs obj)
+        {
+
+     
+       CloseAllPositions();
+       
+        }       
+        
+      
 
 
 //+------------------------------------------------------------------+
@@ -733,10 +798,18 @@ void Data_Check()
         {
             foreach (var position in Positions)
             {
-                if (position.Label == "MyLable" && position.SymbolName == SymbolName && position != null)
-                {
+   
+            if( position.Comment ==  "Sell"  )
+            {
                     ClosePositionAsync(position);
-                }
+            }
+            
+            if( position.Comment ==  "Buy"  )
+            {
+                    ClosePositionAsync(position);
+            }
+
+            
             }
         }
 
