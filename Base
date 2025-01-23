@@ -39,7 +39,7 @@ namespace cAlgo.Robots
         
         double Select_Point  ;
 
-        string Lable = "MyLable" ; 
+        
          
          
         double StopLine ;
@@ -310,6 +310,14 @@ namespace cAlgo.Robots
      if  ( !obj.ShiftKey && !obj.CtrlKey && obj.AltKey )
        
        {
+       
+       
+       SELL_TP_SL();
+       
+       
+       
+       
+       
      
    
          foreach (var order in PendingOrders)
@@ -367,11 +375,6 @@ void Data_Check()
        //============
     
 
-   
-
-       
-   
-   
 
   
   
@@ -524,21 +527,13 @@ void Data_Check()
              
              {
               //=========  پوزیشن در سود 
-             double Base = Math.Abs ((Select_Point - position.EntryPrice ) / Symbol.PipSize );
-             
-             double stop = Math.Abs(   position.EntryPrice +( Base * Symbol.PipSize));
-             
-             ModifyPositionAsync(position, position.StopLoss, stop);
+             position.ModifyTakeProfitPrice(Select_Point);
              }
            else
              {
              //=======  پوزیشن در ضرر
              
-             double Base = Math.Abs (( position.EntryPrice - Select_Point  ) / Symbol.PipSize );
-             
-             double stop = Math.Abs(   position.EntryPrice -( Base * Symbol.PipSize));
-             
-             ModifyPositionAsync(position, position.StopLoss, stop);
+              position.ModifyTakeProfitPrice(Select_Point);
              
              }
 
@@ -549,21 +544,13 @@ void Data_Check()
              
              {
             //=========   پوزیشن در سود
-             double Base = Math.Abs ((  position.EntryPrice - Select_Point) / Symbol.PipSize );
-             
-             double stop = Math.Abs(   position.EntryPrice  - ( Base * Symbol.PipSize));
-             
-             ModifyPositionAsync(position, stop, position.TakeProfit);
+             position.ModifyStopLossPrice(Select_Point);
              }
                else
              {
              //=======  پوزیشن در ضرر
              
-             double Base = Math.Abs ((  Select_Point - position.EntryPrice   ) / Symbol.PipSize );
-             
-             double stop = Math.Abs(   position.EntryPrice  + ( Base * Symbol.PipSize));
-             
-             ModifyPositionAsync(position, stop, position.TakeProfit);
+             position.ModifyStopLossPrice(Select_Point);
              
              }
              
@@ -581,11 +568,12 @@ void Data_Check()
    void SELL_TP_SL ()
       {
       
-      var Sellpositions = Positions.FindAll("MyLabel ",SymbolName,TradeType.Sell);
+   
       
-             foreach (var position in  Sellpositions)
+             foreach (var position in  Positions)
              {
-             
+              if( position.Comment ==  "Sell"  )
+              {
          
              if( Select_Point > Ask )
              
@@ -595,21 +583,16 @@ void Data_Check()
              
              {
               //========= پوزیشن در ضرر یا سر به سر  
-             double Base = Math.Abs ((Select_Point - position.EntryPrice ) / Symbol.PipSize );
+
              
-             double stop = Math.Abs(   position.EntryPrice +( Base * Symbol.PipSize));
-          
-             ModifyPositionAsync (position, stop, position.TakeProfit);
+             position.ModifyStopLossPrice(Select_Point);
+             
              }
              else
              {
              //=======  پوزیشن در سود
              
-             double Base = Math.Abs (( position.EntryPrice - Select_Point  ) / Symbol.PipSize );
-             
-             double stop = Math.Abs(   position.EntryPrice -( Base * Symbol.PipSize));
-             
-             ModifyPositionAsync ( position, stop, position.TakeProfit);
+              position.ModifyStopLossPrice(Select_Point); 
              
              }
 
@@ -620,25 +603,17 @@ void Data_Check()
              
              {
             //=========   پوزیشن در سود
-             double Base = Math.Abs ((  position.EntryPrice - Select_Point ) / Symbol.PipSize );
-             
-             double stop = Math.Abs(   position.EntryPrice  - ( Base * Symbol.PipSize));
-             
-             ModifyPositionAsync(position, position.StopLoss, stop);
+              position.ModifyTakeProfitPrice(Select_Point);
              }
                else
              {
              //=======  پوزیشن در ضرر
              
-             double Base = Math.Abs ((   Select_Point - position.EntryPrice ) / Symbol.PipSize );
-             
-             double stop = Math.Abs(   position.EntryPrice   + ( Base * Symbol.PipSize));
-             
-             ModifyPositionAsync(position, position.StopLoss, stop);
+              position.ModifyTakeProfitPrice(Select_Point);
              
              }
              
-             
+             }
              
              }
        
