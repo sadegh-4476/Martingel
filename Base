@@ -315,35 +315,11 @@ namespace cAlgo.Robots
        SELL_TP_SL();
        
        
+       BUY_SL_TP ();
        
        
-       
-     
-   
-         foreach (var order in PendingOrders)
-         
-         if( order.Comment == "Sell" )
-          {
-         
-              if( Select_Point > Ask )
-             
-             { 
-             
-           if( Select_Point > order.CurrentPrice )
-             
-             {
-
-             
-              order.ModifyStopLossPrice(Select_Point);
-
-             }
-           }
+     }
  
-         
-          }
-     
-       }
-
            
              
   
@@ -513,12 +489,16 @@ void Data_Check()
    void BUY_SL_TP ()
       {
       
-          var Buypositions = Positions.FindAll("MyLabel ",SymbolName,TradeType.Buy);
+        
             
          
            
-          foreach (var position in Buypositions)
+          foreach (var position in Positions)
              {
+             
+       if( position.Comment ==  "Buy"  )
+              {
+         
              if( Select_Point > Ask )
              
              { 
@@ -559,6 +539,40 @@ void Data_Check()
              }
        
             }
+            }
+            //======  Order 
+            
+            
+            foreach (var order in  PendingOrders     )
+             {
+             
+             if( order.Comment ==  "Buy"  )
+              
+              {
+          
+             
+           if( Select_Point > order.TargetPrice )
+             
+             {
+             
+           
+             
+              order.ModifyTakeProfitPrice(Select_Point); 
+             
+             }
+             
+             else
+             {
+             //=======  پوزیشن در سود
+             
+                order.ModifyStopLossPrice(Select_Point);
+             
+              }
+            
+  
+              }
+       
+              }   
       
       
       }
@@ -568,18 +582,19 @@ void Data_Check()
    void SELL_TP_SL ()
       {
       
+             //======  position  || 
    
-      
-             foreach (var position in  Positions)
+
+     foreach (var position in  Positions     )
              {
-              if( position.Comment ==  "Sell"  )
+          if( position.Comment ==  "Sell"  )
               {
          
-             if( Select_Point > Ask )
+         if( Select_Point > Ask )
              
              { 
              
-           if( Select_Point > position.EntryPrice )
+        if( Select_Point > position.EntryPrice )
              
              {
               //========= پوزیشن در ضرر یا سر به سر  
@@ -597,8 +612,12 @@ void Data_Check()
              }
 
             }
-            else
-            {
+           
+         else
+           
+           
+           {
+           
            if( Select_Point < position.EntryPrice )
              
              {
@@ -618,6 +637,40 @@ void Data_Check()
              }
        
             } 
+            
+            
+            //======  Order 
+            
+            
+            foreach (var order in  PendingOrders     )
+             {
+             
+             if( order.Comment ==  "Sell"  )
+              
+              {
+          
+             
+           if( Select_Point > order.TargetPrice )
+             
+             {
+             
+             order.ModifyStopLossPrice(Select_Point);
+             
+             }
+             
+             else
+             {
+             //=======  پوزیشن در سود
+             
+              order.ModifyTakeProfitPrice(Select_Point); 
+             
+              }
+            
+  
+              }
+       
+              } 
+      
       
       
       } 
