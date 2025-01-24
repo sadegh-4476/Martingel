@@ -35,7 +35,10 @@ namespace cAlgo.Robots
         double Select_Point  ;
 
         
-         
+        double Buy_L_R   = 0.0 ;
+        double Buy_P_R   = 0.0 ;
+        double Sell_L_R  = 0.0 ;
+        double Sell_P_R  = 0.0 ;
          
         double StopLine ;
             
@@ -286,10 +289,9 @@ namespace cAlgo.Robots
      Lot = Convert.ToDouble(Risk);
      
      Data_Check();
+    
+
      
-     
- 
-      
        }
         
 
@@ -372,27 +374,50 @@ void Data_Check()
                 {
       
                  
-                    StopLine =    ((line as ChartHorizontalLine).Y);
-                    
-                   
+               StopLine =    ((line as ChartHorizontalLine).Y);
+                     
+               BUY_LOSS ();
+               BUY_PROFIT();
+      
+               SELL_PROFIT();
+               SELL_LOSS();
+               
+               //===========
+               Caculat_profit();
+  
                 }
             }
-        
-       //============
-    
 
-
-  
-  
- 
-       
-        
      
-        
+     
+     
+     
      
             
       }
-   
+ 
+//+------------------------------------------------------------------+
+//|     ===================  Caculat_profit     ===============      |
+//+------------------------------------------------------------------+
+
+    void Caculat_profit()
+    {
+ 
+
+       double result = AddNumbers(Buy_L_R , Buy_P_R , Sell_L_R , Sell_P_R);
+       lossblocktest.Text = ("Loss: "+ result );
+        
+        
+      double AddNumbers(double Buy_L_R, double Buy_P_R ,double Sell_L_R, double Sell_P_R)
+       {
+        return  Buy_L_R +  Buy_P_R +  Sell_L_R  + Sell_P_R    ;
+        
+       }
+
+        
+    }
+
+ 
 //+------------------------------------------------------------------+
 //|     ===================  Buy BOTTON     ===================      |
 //+------------------------------------------------------------------+
@@ -436,7 +461,7 @@ void Data_Check()
       void OnRevercBoxClick(ButtonClickEventArgs obj)
         {
 
-     
+         ReversePositions();
          
        
         }       
@@ -512,8 +537,74 @@ void Data_Check()
       {
       
       
+        var  M_Profit  = 0.0;
+        
+        
       
-      
+      //======= Market
+        foreach (var position in Positions)
+             {
+             
+           if( position.Comment ==  "Sell"  )
+              {
+            if( Select_Point > position.EntryPrice  )
+              {
+             var   Vloume          = Math.Abs( position.VolumeInUnits / 100000 );
+
+            var   entry_up        =  Math.Max( StopLine , position.EntryPrice  );
+            var   entry_down      =  Math.Min( StopLine , position.EntryPrice  );
+             
+             
+            var   Pip             =  Math.Abs( entry_up  -  entry_down  );
+            
+            var   PnL             =   Math.Abs ( ((Vloume  * Pip) / Symbol.PipValue) * 10);
+          
+            M_Profit          += Math.Round (   Math.Abs ( PnL - position.Commissions   ) ,2);
+              
+               
+              }
+              }
+              }
+         //======= Pending 
+         var  P_Profit  = 0.0;
+         
+      foreach (var order in  PendingOrders     )
+             {
+             
+             if( order.Comment ==  "Sell"  )
+              {
+             
+           if( Select_Point > order.TargetPrice  )
+             { 
+            var   Vloume          = Math.Abs( order.VolumeInUnits / 100000 );
+
+            var   entry_up        =  Math.Max( StopLine , order.TargetPrice  );
+            var   entry_down      =  Math.Min( StopLine , order.TargetPrice  );
+             
+            var   Pip             =  Math.Abs( entry_up  -  entry_down  );
+            
+            var   PnL             =   Math.Abs ( ((Vloume  * Pip) / Symbol.PipValue) * 10);
+          
+            P_Profit             += Math.Round (   Math.Abs ( PnL    ) ,2);
+            
+               
+            
+              }
+              
+              }
+
+              }
+
+       
+
+              var Net_Profit =  Math.Abs( M_Profit  +  P_Profit  );
+
+              Sell_L_R  = - Net_Profit;
+     
+  
+            
+            
+
       }
 
 //+------------------------------------------------------------------+
@@ -522,7 +613,40 @@ void Data_Check()
    void  SELL_PROFIT()
       {
       
+        var  M_Profit  = 0.0;
+        
+        
       
+      //======= Market
+        foreach (var position in Positions)
+             {
+             
+           if( position.Comment ==  "Sell"  )
+              {
+            if( Select_Point < position.EntryPrice  )
+              {
+             var   Vloume          = Math.Abs( position.VolumeInUnits / 100000 );
+
+            var   entry_up        =  Math.Max( StopLine , position.EntryPrice  );
+            var   entry_down      =  Math.Min( StopLine , position.EntryPrice  );
+             
+             
+            var   Pip             =  Math.Abs( entry_up  -  entry_down  );
+            
+            var   PnL             =   Math.Abs ( ((Vloume  * Pip) / Symbol.PipValue) * 10);
+          
+            M_Profit          += Math.Round (   Math.Abs ( PnL - position.Commissions   ) ,2);
+              
+               
+              }
+              }
+              }
+
+               Sell_P_R  =  M_Profit;
+     
+
+               
+            
       
       
       }
@@ -534,7 +658,40 @@ void Data_Check()
       {
       
       
+        var  M_Profit  = 0.0;
+        
+        
       
+      //======= Market
+        foreach (var position in Positions)
+             {
+             
+           if( position.Comment ==  "Buy"  )
+              {
+            if( Select_Point > position.EntryPrice  )
+              {
+             var   Vloume          = Math.Abs( position.VolumeInUnits / 100000 );
+
+            var   entry_up        =  Math.Max( StopLine , position.EntryPrice  );
+            var   entry_down      =  Math.Min( StopLine , position.EntryPrice  );
+             
+             
+            var   Pip             =  Math.Abs( entry_up  -  entry_down  );
+            
+            var   PnL             =   Math.Abs ( ((Vloume  * Pip) / Symbol.PipValue) * 10);
+          
+            M_Profit          += Math.Round (   Math.Abs ( PnL - position.Commissions   ) ,2);
+              
+               
+              }
+              }
+              }
+
+               Buy_P_R  =  M_Profit;
+     
+ 
+              
+            
       
       }
 
@@ -544,10 +701,78 @@ void Data_Check()
    void BUY_LOSS ()
       {
       
+        var  M_Profit  = 0.0;
+        
+        
       
+      //======= Market
+        foreach (var position in Positions)
+             {
+             
+           if( position.Comment ==  "Buy"  )
+              {
+            if( Select_Point < position.EntryPrice  )
+              {
+             var   Vloume          = Math.Abs( position.VolumeInUnits / 100000 );
+
+            var   entry_up        =  Math.Max( StopLine , position.EntryPrice  );
+            var   entry_down      =  Math.Min( StopLine , position.EntryPrice  );
+             
+             
+            var   Pip             =  Math.Abs( entry_up  -  entry_down  );
+            
+            var   PnL             =   Math.Abs ( ((Vloume  * Pip) / Symbol.PipValue) * 10);
+          
+            M_Profit          += Math.Round (   Math.Abs ( PnL - position.Commissions   ) ,2);
+              
+               
+              }
+              }
+              }
+         //======= Pending 
+         var  P_Profit  = 0.0;
+         
+      foreach (var order in  PendingOrders     )
+             {
+             
+             if( order.Comment ==  "Buy"  )
+              {
+             
+           if( Select_Point < order.TargetPrice  )
+             { 
+            var   Vloume          = Math.Abs( order.VolumeInUnits / 100000 );
+
+            var   entry_up        =  Math.Max( StopLine , order.TargetPrice  );
+            var   entry_down      =  Math.Min( StopLine , order.TargetPrice  );
+             
+            var   Pip             =  Math.Abs( entry_up  -  entry_down  );
+            
+            var   PnL             =   Math.Abs ( ((Vloume  * Pip) / Symbol.PipValue) * 10);
+          
+            P_Profit             += Math.Round (   Math.Abs ( PnL    ) ,2);
+            
+              
+            
+              }
+              
+              }
+
+              }
+
+       
+
+              var Net_Profit =  Math.Abs( M_Profit  +  P_Profit  );
+
+              Buy_L_R  = - Net_Profit;
+     
+
+              
+            
+            
+            
+    
       
-      
-      }
+       }
 //+------------------------------------------------------------------+
 //|     ===================   BUY_SL_TP          =================   |
 //+------------------------------------------------------------------+ 
@@ -742,37 +967,33 @@ void Data_Check()
 //+------------------------------------------------------------------+
 //|     ===================   FindPositions      =================   |
 //+------------------------------------------------------------------+ 
-   void FindPositions ()
+   void ReversePositions ()
       {
       
-             
-         //var Allpositions = Positions.FindAll("MyLabel ",SymbolName);
-       
-         var Profit            = 0.0 ;
-        
-             foreach (var Position in Positions)
-             {
-             
-           var   Vloume              = Math.Abs( Position.VolumeInUnits / 100000 );
-             
-           var   EntryPrice          =  Position.EntryPrice;
-           var Point                =  StopLine ;
-           var  EntryCommissions    =   Math.Abs( Position.Commissions  +  Position.Commissions );
-            
-
-           var entry_up        =  Math.Max( Point , EntryPrice  );
-           var entry_down      =  Math.Min( Point , EntryPrice  );
-             
-           var  Pip                 =  Math.Abs( entry_up  -  entry_down  );
-            
-           var   PnL                 =   Math.Abs ( ((Vloume  * Pip) / Symbol.PipValue) * 10);
-          
-           Profit          += Math.Round (   Math.Abs ( PnL - EntryCommissions    ) ,2);
-       
-             lossblocktest.Text = ("Loss: "+Profit );
-
-             }
-      
+            foreach (var position in Positions)
+            {
+                
+                
+                 
+                var newVolume = position.Volume;  
+                
+                Print( "newVolume" + newVolume);
+                var direction = position.TradeType == TradeType.Buy ? TradeType.Sell : TradeType.Buy;
+                
+                var Lable  = position.Label == "MyLable" ? "MyLabel" : "MyLabel";
+                var Comment = position.Comment == "Sell" ? "Buy" : "Sell";
+                
+                
+                 ClosePosition(position);
+                 
+              
+               var result = ExecuteMarketOrder(direction, position.SymbolName, newVolume,Lable,null,null,Comment);
+               
+              
+               
+               
+               
+           }
       
       }
 
@@ -790,6 +1011,8 @@ void Data_Check()
                     CancelPendingOrderAsync(order);
                 }
             }
+            
+            Chart.RemoveObject("Sl Line");
         }
 //+------------------------------------------------------------------+
 //|     ===================   CloseAllPosition ===================   |
