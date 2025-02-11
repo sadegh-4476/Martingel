@@ -545,7 +545,7 @@ void Data_Check()
         foreach (var position in Positions)
              {
              
-           if( position.Comment ==  "Sell"  )
+           if( position.Comment ==  "Sell"       &&  position.SymbolName == SymbolName ) 
               {
             if( Select_Point > position.EntryPrice  )
               {
@@ -571,7 +571,7 @@ void Data_Check()
       foreach (var order in  PendingOrders     )
              {
              
-             if( order.Comment ==  "Sell"  )
+             if( order.Comment ==  "Sell"     &&  order.SymbolName == SymbolName  )
               {
              
            if( Select_Point > order.TargetPrice  )
@@ -621,7 +621,7 @@ void Data_Check()
         foreach (var position in Positions)
              {
              
-           if( position.Comment ==  "Sell"  )
+           if( position.Comment ==  "Sell"      &&  position.SymbolName == SymbolName ) 
               {
             if( Select_Point < position.EntryPrice  )
               {
@@ -666,7 +666,7 @@ void Data_Check()
         foreach (var position in Positions)
              {
              
-           if( position.Comment ==  "Buy"  )
+           if( position.Comment ==  "Buy"      &&  position.SymbolName == SymbolName  )
               {
             if( Select_Point > position.EntryPrice  )
               {
@@ -709,7 +709,7 @@ void Data_Check()
         foreach (var position in Positions)
              {
              
-           if( position.Comment ==  "Buy"  )
+           if( position.Comment ==  "Buy"     &&  position.SymbolName == SymbolName   )
               {
             if( Select_Point < position.EntryPrice  )
               {
@@ -735,7 +735,7 @@ void Data_Check()
       foreach (var order in  PendingOrders     )
              {
              
-             if( order.Comment ==  "Buy"  )
+             if( order.Comment ==  "Buy"     &&  order.SymbolName == SymbolName ) 
               {
              
            if( Select_Point < order.TargetPrice  )
@@ -786,7 +786,7 @@ void Data_Check()
           foreach (var position in Positions)
              {
              
-       if( position.Comment ==  "Buy"  )
+       if( position.Comment ==  "Buy"    &&  position.SymbolName == SymbolName )  
               {
          
              if( Select_Point > Ask )
@@ -836,7 +836,7 @@ void Data_Check()
             foreach (var order in  PendingOrders     )
              {
              
-             if( order.Comment ==  "Buy"  )
+             if( order.Comment ==  "Buy"       &&  order.SymbolName == SymbolName )  
               
               {
           
@@ -877,7 +877,7 @@ void Data_Check()
 
      foreach (var position in  Positions     )
              {
-          if( position.Comment ==  "Sell"  )
+          if( position.Comment ==  "Sell"  && position.SymbolName == SymbolName )
               {
          
          if( Select_Point > Ask )
@@ -935,7 +935,7 @@ void Data_Check()
             foreach (var order in  PendingOrders     )
              {
              
-             if( order.Comment ==  "Sell"  )
+             if( order.Comment ==  "Sell"   && order.SymbolName == SymbolName  )
               
               {
           
@@ -965,35 +965,70 @@ void Data_Check()
       
       } 
 //+------------------------------------------------------------------+
-//|     ===================   FindPositions      =================   |
+//|     ===================   ReversePositions      =================   |
 //+------------------------------------------------------------------+ 
    void ReversePositions ()
       {
-      
-            foreach (var position in Positions)
+
+           
+           var newVolume = 0.0;
+           var Tradetype = 0 ;
+
+           
+           
+         foreach (var position in Positions)
             {
-                
-                
+   
+      if( position.SymbolName == SymbolName  )
+            {
                  
-                var newVolume = position.Volume;  
-                
-                Print( "newVolume" + newVolume);
-                var direction = position.TradeType == TradeType.Buy ? TradeType.Sell : TradeType.Buy;
-                
-                var Lable  = position.Label == "MyLable" ? "MyLabel" : "MyLabel";
-                var Comment = position.Comment == "Sell" ? "Buy" : "Sell";
+                  newVolume += position.Volume;  
                 
                 
-                 ClosePosition(position);
+               var   direction = position.TradeType == TradeType.Buy ? TradeType.Sell : TradeType.Buy;
+               
+                 if(direction == 0)
+                 {
                  
+                 Tradetype = 0 ;
+                 
+                 }
+               
+                 else
+                 {
+                 
+                  Tradetype = 1 ;
+                 
+                 }
+
+                // ClosePosition(position);
+                  
+                    
+              }
+               
+              position.Close(); 
               
-               var result = ExecuteMarketOrder(direction, position.SymbolName, newVolume,Lable,null,null,Comment);
-               
-              
-               
-               
-               
            }
+           
+           
+           
+          if(Tradetype == 0 )
+          {
+          var result = ExecuteMarketOrder(TradeType.Buy, SymbolName,newVolume,"MyLabel",null,null, "Buy"   ); 
+          
+          }
+          else
+          {
+          
+          var result = ExecuteMarketOrder(TradeType.Sell,  SymbolName,newVolume,"MyLabel",null,null,"Sell"   ); 
+          
+          }
+         
+          
+          
+          
+           
+//===========        
       
       }
 
@@ -1022,14 +1057,15 @@ void Data_Check()
             foreach (var position in Positions)
             {
    
-            if( position.Comment ==  "Sell"  )
+            if( position.Comment ==  "Sell"   &&  position.SymbolName == SymbolName )
             {
-                    ClosePositionAsync(position);
+                   position.Close(); 
             }
             
-            if( position.Comment ==  "Buy"  )
+            if( position.Comment ==  "Buy"  &&  position.SymbolName == SymbolName )
             {
-                    ClosePositionAsync(position);
+                     
+                    position.Close(); 
             }
 
             
